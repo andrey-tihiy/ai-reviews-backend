@@ -2,10 +2,12 @@
 
 from django.db import migrations
 
+
 def create_user_groups(apps, schema_editor):
-    Group = apps.get_model('auth', 'Group')
-    Group.objects.get_or_create(name='free')
-    Group.objects.get_or_create(name='premium')
+    Group = apps.get_model("auth", "Group")
+    Group.objects.get_or_create(name="free")
+    Group.objects.get_or_create(name="premium")
+
 
 class Migration(migrations.Migration):
 

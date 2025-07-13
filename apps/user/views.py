@@ -2,15 +2,27 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
+from rest_framework.viewsets import GenericViewSet
+from rest_framework.mixins import (
+    ListModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+)
 from django.contrib.auth import authenticate, login, logout
 from .models import User
 from .serializers import UserSerializer, UserCreateSerializer
 
 
-class UserViewSet(viewsets.ModelViewSet):
+class UserViewSet(
+    GenericViewSet,
+    ListModelMixin,
+    RetrieveModelMixin,
+    UpdateModelMixin,
+):
     """
     A viewset for viewing and editing user instances.
     """
+
     queryset = User.objects.all()
     serializer_class = UserSerializer
 
