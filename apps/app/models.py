@@ -22,7 +22,7 @@ class App(UUIDModel):
         return self.platform_data.filter(is_primary=True).first()
 
 
-class AppPlatformData(models.Model):
+class AppPlatformData(UUIDModel):
     """
     Platform-specific data for App
     """
