@@ -22,16 +22,15 @@ class AppListSerializer(serializers.ModelSerializer):
     """
     Serializer for App list view (without platform data for performance)
     """
-    owner = UserSerializer(read_only=True)
     competitors_count = serializers.SerializerMethodField()
     
     class Meta:
         model = App
         fields = [
-            'id', 'name', 'owner', 'competitors_count',
+            'id', 'name', 'competitors_count',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
     
     def get_competitors_count(self, obj):
         return obj.competitors.count()
@@ -41,17 +40,16 @@ class AppDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for App detail view (with primary platform data)
     """
-    owner = UserSerializer(read_only=True)
     primary_platform_data = serializers.SerializerMethodField()
     competitors_count = serializers.SerializerMethodField()
     
     class Meta:
         model = App
         fields = [
-            'id', 'name', 'owner', 'primary_platform_data',
+            'id', 'name', 'primary_platform_data',
             'competitors_count', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
     
     def get_primary_platform_data(self, obj):
         primary_platform = obj.primary_platform
@@ -67,23 +65,16 @@ class AppCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for App creation
     """
-    competitors = serializers.PrimaryKeyRelatedField(
-        queryset=App.objects.none(),
-        many=True,
-        required=False,
-        help_text="List of competitor app IDs"
-    )
+    url = serializers.URLField()
     
     class Meta:
         model = App
-        fields = ['name', 'competitors']
+        fields = ['name', 'url']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Limit competitors queryset to current user's apps
-        if self.context.get('request'):
-            user = self.context['request'].user
-            self.fields['competitors'].queryset = App.objects.filter(owner=user)
+
     
     def validate_name(self, value):
         """
@@ -98,11 +89,17 @@ class AppCreateSerializer(serializers.ModelSerializer):
         """
         Create app with current user as owner
         """
-        user = self.context['request'].user
-        competitors = validated_data.pop('competitors', [])
+        from .tasks import process_new_app
         
+        user = self.context['request'].user
+        url = validated_data.pop('url', None)
         app = App.objects.create(owner=user, **validated_data)
-        app.competitors.set(competitors)
+        
+        # Start async processing of the new app
+        process_new_app.delay(
+            app_id=str(app.id),
+            url=url
+        )
         
         return app
 
