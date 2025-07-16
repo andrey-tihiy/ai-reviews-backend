@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     # Local apps
     "apps.service",
     "apps.user",
+    "apps.app",
 ]
 
 MIDDLEWARE = [
