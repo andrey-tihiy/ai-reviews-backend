@@ -12,7 +12,7 @@ urlpatterns = [
     
     # User management endpoints (handled by ViewSet)
     # GET /api/v1/users/ - List users
-    # POST /api/v1/users/ - Create user (registration)
+    # POST /api/v1/users/register/ - Register user
     # GET /api/v1/users/{id}/ - Get user details
     # PUT /api/v1/users/{id}/ - Update user
     # PATCH /api/v1/users/{id}/ - Partially update user

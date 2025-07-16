@@ -7,7 +7,6 @@ from rest_framework.mixins import (
     ListModelMixin,
     RetrieveModelMixin,
     UpdateModelMixin,
-    CreateModelMixin,
 )
 from rest_framework.views import APIView
 from rest_framework.pagination import PageNumberPagination
@@ -45,7 +44,6 @@ class UserViewSet(
     ListModelMixin,
     RetrieveModelMixin,
     UpdateModelMixin,
-    CreateModelMixin,
 ):
     """
     A viewset for viewing and editing user instances.
@@ -58,7 +56,7 @@ class UserViewSet(
         """
         Instantiates and returns the list of permissions that this view requires.
         """
-        if self.action in ["create", "login"]:
+        if self.action in ["register"]:
             permission_classes = [AllowAny]
         else:
             permission_classes = [IsAuthenticated]
@@ -68,7 +66,7 @@ class UserViewSet(
         """
         Return the class to use for the serializer.
         """
-        if self.action == "create":
+        if self.action == "register":
             return UserRegistrationSerializer
         elif self.action in ["update", "partial_update"]:
             return UserUpdateSerializer
@@ -86,7 +84,8 @@ class UserViewSet(
             ),
         },
         summary="Get user list",
-        description="Retrieve a paginated list of users. Requires authentication."
+        description="Retrieve a paginated list of users. Requires authentication.",
+        tags=["Users"]
     )
     def list(self, request):
         """
@@ -132,7 +131,8 @@ class UserViewSet(
             ),
         },
         summary="Get user details",
-        description="Retrieve details of a specific user by ID."
+        description="Retrieve details of a specific user by ID.",
+        tags=["Users"]
     )
     def retrieve(self, request, pk=None):
         """
@@ -154,7 +154,7 @@ class UserViewSet(
         request=UserRegistrationSerializer,
         responses={
             201: OpenApiResponse(
-                description="User created successfully",
+                description="User registered successfully",
                 response=UserResponseSerializer
             ),
             400: OpenApiResponse(
@@ -162,22 +162,29 @@ class UserViewSet(
                 response=ErrorResponseSerializer
             ),
         },
-        summary="Create new user",
-        description="Register a new user account."
+        summary="Register new user",
+        description="Register a new user account with email and password.",
+        tags=["Authentication"]
     )
-    def create(self, request):
+    @action(detail=False, methods=["post"], permission_classes=[AllowAny])
+    def register(self, request):
         """
-        Create a new user
+        Register a new user
         """
         serializer = self.get_serializer(data=request.data)
         
         if serializer.is_valid():
             user = serializer.save()
+            
+            # Set user as active temporarily
+            user.is_active = True
+            user.save()
+            
             user_data = UserSerializer(user).data
             
             return APIResponse.success(
                 data=user_data,
-                message="User created successfully",
+                message="User registered successfully",
                 status_code=status.HTTP_201_CREATED
             )
         
@@ -200,7 +207,8 @@ class UserViewSet(
             ),
         },
         summary="Update user",
-        description="Update user information."
+        description="Update user information.",
+        tags=["Users"]
     )
     def update(self, request, pk=None):
         """
@@ -243,7 +251,8 @@ class UserViewSet(
             ),
         },
         summary="Partially update user",
-        description="Partially update user information."
+        description="Partially update user information.",
+        tags=["Users"]
     )
     def partial_update(self, request, pk=None):
         """
@@ -281,7 +290,8 @@ class UserViewSet(
             ),
         },
         summary="Get current user",
-        description="Get information about the currently authenticated user."
+        description="Get information about the currently authenticated user.",
+        tags=["Users"]
     )
     @action(detail=False, methods=["get"], permission_classes=[IsAuthenticated])
     def me(self, request):
@@ -311,7 +321,8 @@ class UserViewSet(
             ),
         },
         summary="Change password",
-        description="Change the password for the currently authenticated user."
+        description="Change the password for the currently authenticated user.",
+        tags=["Users"]
     )
     @action(detail=False, methods=["post"], permission_classes=[IsAuthenticated])
     def change_password(self, request):
@@ -355,7 +366,8 @@ class LoginView(APIView):
             ),
         },
         summary="User login",
-        description="Authenticate user with email and password to get JWT tokens."
+        description="Authenticate user with email and password to get JWT tokens.",
+        tags=["Authentication"]
     )
     def post(self, request):
         """
@@ -400,7 +412,8 @@ class TokenRefreshView(APIView):
             ),
         },
         summary="Refresh JWT token",
-        description="Refresh access token using refresh token."
+        description="Refresh access token using refresh token.",
+        tags=["Authentication"]
     )
     def post(self, request):
         """

@@ -39,7 +39,7 @@
 
 ### Регистрация пользователя
 
-**POST** `/api/v1/users/`
+**POST** `/api/v1/users/register/`
 
 ```json
 {
@@ -55,7 +55,7 @@
 ```json
 {
   "success": true,
-  "message": "User created successfully",
+  "message": "User registered successfully",
   "data": {
     "id": "uuid-string",
     "email": "user@example.com",

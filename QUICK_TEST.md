@@ -17,7 +17,7 @@ python manage.py runserver
 ### Регистрация пользователя
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/users/ \
+curl -X POST http://localhost:8000/api/v1/users/register/ \
 -H "Content-Type: application/json" \
 -d '{
   "email": "test@example.com",
@@ -87,7 +87,7 @@ curl -X POST http://localhost:8000/api/v1/auth/login/ \
 ### Слабый пароль при регистрации
 
 ```bash
-curl -X POST http://localhost:8000/api/v1/users/ \
+curl -X POST http://localhost:8000/api/v1/users/register/ \
 -H "Content-Type: application/json" \
 -d '{
   "email": "test2@example.com",
@@ -111,7 +111,7 @@ curl -X GET http://localhost:8000/api/v1/users/me/
 ```json
 {
   "success": true,
-  "message": "User created successfully",
+  "message": "User registered successfully",
   "data": {
     "id": "uuid-here",
     "email": "test@example.com",
