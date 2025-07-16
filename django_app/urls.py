@@ -26,7 +26,8 @@ from drf_spectacular.views import (
 urlpatterns = [
     path("glory-hole/", admin.site.urls),
     # API routes
-    path("api/v1/users/", include("apps.user.urls")),
+    path("api/v1/", include("apps.user.urls")),
+    path("api/v1/", include("apps.app.urls")),
     # API documentation
     path("api/schema/", SpectacularAPIView.as_view(), name="schema"),
     path(
