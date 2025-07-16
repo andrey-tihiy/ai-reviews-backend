@@ -1,37 +1,51 @@
+import logging
 from celery import shared_task
 from .models import App
+from .services.apple.parser import AppleAppStoreService
+import requests
+
+logger = logging.getLogger('apps.app.tasks')
 
 
 @shared_task
-def process_new_app(app_id=None, url=None):
+def process_new_app(app_id: str, url: str):
     """
     Process newly created app - analyze URL and collect platform data
     
     Args:
-        app_id (str, optional): UUID of the created app
-        url (str, optional): App store URL for processing
+        app_id (str): UUID of the created app
+        url (str): App store URL for processing
     """
     try:
-        # Get app instance if app_id provided
-        if app_id:
-            app = App.objects.get(id=app_id)
-
-
+        app = App.objects.get(id=app_id)
+        logger.info(f"Processing app: {app.name} (ID: {app.id})")
+        logger.info(f"App URL for processing: {url}")
         
-        # Print URL if provided
-        if url:
-            print(f"App URL for processing: {url}")
+        # Determine platform and process accordingly
+        if 'apps.apple.com' in url:
+            apple_service = AppleAppStoreService()
+            result = apple_service.process_app_data(app, url)
+            
+            if result.get('success'):
+                logger.info(f"Successfully processed Apple App Store data:")
+                logger.info(f"- Platform data ID: {result.get('platform_data_id')}")
+                logger.info(f"- Created new record: {result.get('created')}")
+                logger.info(f"- Reviews fetched: {result.get('reviews_count')}")
+            else:
+                logger.error(f"Failed to process Apple App Store data: {result.get('error')}")
+            
+            return result
+        else:
+            logger.warning(f"Unsupported platform URL: {url}")
+            return {'success': False, 'error': f'Unsupported platform URL: {url}'}
         
-        # Here you can add actual processing logic:
-        # - Parse URL to determine platform (App Store, Google Play, etc.)
-        # - Fetch app metadata from the platform
-        # - Create AppPlatformData record
-        # - Send notifications, etc.
-        
-        print("App processing completed successfully")
+        # Future: Add support for Google Play, Product Hunt, etc.
         
     except App.DoesNotExist:
-        print(f"App with ID {app_id} not found")
+        error_msg = f"App with ID {app_id} not found"
+        logger.error(error_msg)
+        return {'success': False, 'error': error_msg}
     except Exception as e:
-        print(f"Error processing app: {str(e)}")
-        raise
+        error_msg = f"Error processing app: {str(e)}"
+        logger.exception(error_msg)  # .exception() automatically includes stack trace
+        return {'success': False, 'error': error_msg}

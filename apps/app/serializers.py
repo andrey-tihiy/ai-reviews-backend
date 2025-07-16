@@ -22,16 +22,15 @@ class AppListSerializer(serializers.ModelSerializer):
     """
     Serializer for App list view (without platform data for performance)
     """
-    owner = UserSerializer(read_only=True)
     competitors_count = serializers.SerializerMethodField()
     
     class Meta:
         model = App
         fields = [
-            'id', 'name', 'owner', 'competitors_count',
+            'id', 'name', 'competitors_count',
             'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
     
     def get_competitors_count(self, obj):
         return obj.competitors.count()
@@ -41,17 +40,16 @@ class AppDetailSerializer(serializers.ModelSerializer):
     """
     Serializer for App detail view (with primary platform data)
     """
-    owner = UserSerializer(read_only=True)
     primary_platform_data = serializers.SerializerMethodField()
     competitors_count = serializers.SerializerMethodField()
     
     class Meta:
         model = App
         fields = [
-            'id', 'name', 'owner', 'primary_platform_data',
+            'id', 'name', 'primary_platform_data',
             'competitors_count', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'owner', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
     
     def get_primary_platform_data(self, obj):
         primary_platform = obj.primary_platform
