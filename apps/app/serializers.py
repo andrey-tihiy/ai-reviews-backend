@@ -67,23 +67,16 @@ class AppCreateSerializer(serializers.ModelSerializer):
     """
     Serializer for App creation
     """
-    competitors = serializers.PrimaryKeyRelatedField(
-        queryset=App.objects.none(),
-        many=True,
-        required=False,
-        help_text="List of competitor app IDs"
-    )
+    url = serializers.URLField()
     
     class Meta:
         model = App
-        fields = ['name', 'competitors']
+        fields = ['name', 'url']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # Limit competitors queryset to current user's apps
-        if self.context.get('request'):
-            user = self.context['request'].user
-            self.fields['competitors'].queryset = App.objects.filter(owner=user)
+
     
     def validate_name(self, value):
         """
@@ -98,11 +91,17 @@ class AppCreateSerializer(serializers.ModelSerializer):
         """
         Create app with current user as owner
         """
-        user = self.context['request'].user
-        competitors = validated_data.pop('competitors', [])
+        from .tasks import process_new_app
         
+        user = self.context['request'].user
+        url = validated_data.pop('url', None)
         app = App.objects.create(owner=user, **validated_data)
-        app.competitors.set(competitors)
+        
+        # Start async processing of the new app
+        process_new_app.delay(
+            app_id=str(app.id),
+            url=url
+        )
         
         return app
 
