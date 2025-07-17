@@ -117,7 +117,7 @@ class AppleAppStoreService(BasePlatformService):
             objs.append(Review(
                 app_platform_data=app_platform_data,
                 review_id=rev.get('id', ''),
-                author=rev.get('author', {}).get('name', ''),
+                author=rev.get('author', {}),
                 rating=rev.get('rating', 0),
                 title=rev.get('title', ''),
                 content=rev.get('content', ''),
