@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.service",
     "apps.user",
     "apps.app",
+    "apps.review",
 ]
 
 MIDDLEWARE = [

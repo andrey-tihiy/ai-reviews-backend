@@ -26,12 +26,7 @@ def process_new_app(app_id: str, url: str):
             apple_service = AppleAppStoreService()
             result = apple_service.process_app_data(app, url)
             
-            if result.get('success'):
-                logger.info(f"Successfully processed Apple App Store data:")
-                logger.info(f"- Platform data ID: {result.get('platform_data_id')}")
-                logger.info(f"- Created new record: {result.get('created')}")
-                logger.info(f"- Reviews fetched: {result.get('reviews_count')}")
-            else:
+            if not result.get('success'):
                 logger.error(f"Failed to process Apple App Store data: {result.get('error')}")
             
             return result
