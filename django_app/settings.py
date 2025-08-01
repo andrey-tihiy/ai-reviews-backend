@@ -44,11 +44,13 @@ INSTALLED_APPS = [
     "rest_framework_simplejwt",
     "corsheaders",
     "drf_spectacular",
+    "django_json_widget",
     # Local apps
     "apps.service",
     "apps.user",
     "apps.app",
     "apps.review",
+    "apps.review_analysis",
 ]
 
 MIDDLEWARE = [
@@ -240,6 +242,26 @@ CELERY_RESULT_SERIALIZER = "json"
 CELERY_TIMEZONE = TIME_ZONE
 CELERY_BEAT_SCHEDULE = {}
 
+# Celery task routing
+CELERY_TASK_ROUTES = {
+    'apps.review_analysis.tasks.*': {'queue': 'analysis'},
+    'apps.app.tasks.*': {'queue': 'default'},
+}
+
+# Define queues
+CELERY_QUEUES = {
+    'default': {
+        'exchange': 'default',
+        'exchange_type': 'direct',
+        'binding_key': 'default',
+    },
+    'analysis': {
+        'exchange': 'analysis',
+        'exchange_type': 'direct',
+        'binding_key': 'analysis',
+    },
+}
+
 # JWT settings
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=60),
@@ -359,4 +381,7 @@ CACHES = {
 
 # Session configuration
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
+
+# OpenAI settings (for review analysis)
+OPENAI_API_KEY = "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" #os.getenv("OPENAI_API_KEY", "")
 SESSION_CACHE_ALIAS = "default"

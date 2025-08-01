@@ -7,3 +7,15 @@ redis==5.2.1
 django-cors-headers==4.5.0
 python-decouple==3.8
 django-redis==5.4.0
+
+# Review analysis dependencies
+django-json-widget==2.0.3
+
+# NLP dependencies (optional but recommended)
+spacy==3.7.2
+spacytextblob==4.0.0
+vaderSentiment==3.3.2
+textblob==0.17.1
+
+# OpenAI for GPT analysis (optional)
+openai==1.12.0

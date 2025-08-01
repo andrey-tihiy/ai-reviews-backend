@@ -5,6 +5,7 @@ from .models import Review
 from django.db import models
 from django.db.models import F
 from apps.app.models import AppPlatformData
+from apps.review_analysis.admin import AnalysisResultInline
 
 
 @admin.register(Review)
@@ -17,6 +18,7 @@ class ReviewAdmin(admin.ModelAdmin):
         'title_preview',
         'version',
         'get_app_owner',
+        'get_analysis_status',
         'platform_updated_at',
         'created_at'
     ]
@@ -47,6 +49,8 @@ class ReviewAdmin(admin.ModelAdmin):
         'get_platform',
         'get_rating_stars'
     ]
+    
+    inlines = [AnalysisResultInline]
     
     fieldsets = (
         ('Basic Information', {
@@ -127,6 +131,27 @@ class ReviewAdmin(admin.ModelAdmin):
     get_app_owner.short_description = 'App Owner'
     get_app_owner.admin_order_field = 'app_platform_data__app__owner__email'
     
+    def get_analysis_status(self, obj):
+        """Shows analysis status"""
+        if hasattr(obj, 'analysis_result'):
+            tone = obj.analysis_result.tone
+            if tone == 'very_negative':
+                color = 'darkred'
+            elif tone == 'negative':
+                color = 'red'
+            elif tone == 'neutral':
+                color = 'gray'
+            elif tone == 'positive':
+                color = 'green'
+            else:  # very_positive
+                color = 'darkgreen'
+            return format_html(
+                '<span style="color: {};">✓ Analyzed</span>',
+                color
+            )
+        return format_html('<span style="color: orange;">⚠ Pending</span>')
+    get_analysis_status.short_description = 'Analysis'
+    
     def get_queryset(self, request):
         """Оптимизируем запросы с prefetch_related"""
         return super().get_queryset(request).select_related(
@@ -138,7 +163,7 @@ class ReviewAdmin(admin.ModelAdmin):
     list_max_show_all = 1000
     
     # Дополнительные действия
-    actions = ['mark_as_important', 'export_reviews', 'mark_high_rating_reviews']
+    actions = ['mark_as_important', 'export_reviews', 'mark_high_rating_reviews', 'run_analysis']
     
     def mark_as_important(self, request, queryset):
         """Action to mark reviews as important"""
@@ -189,11 +214,41 @@ class ReviewAdmin(admin.ModelAdmin):
         return response
     export_reviews.short_description = 'Export reviews to CSV'
     
+    def run_analysis(self, request, queryset):
+        """Action to run analysis on selected reviews"""
+        from apps.review_analysis.tasks import reanalyze_reviews
+        import logging
+        
+        logger = logging.getLogger(__name__)
+        
+        # Преобразуем UUID в строки для Celery
+        review_ids = [str(id) for id in queryset.values_list('id', flat=True)]
+        
+        logger.info(f"Starting analysis for reviews: {review_ids}")
+        
+        try:
+            result = reanalyze_reviews.apply_async(args=[review_ids], queue='analysis')
+            logger.info(f"Task submitted with ID: {result.id}")
+            
+            self.message_user(
+                request,
+                f'Analysis started for {len(review_ids)} reviews. Results will be available soon.',
+                level='SUCCESS'
+            )
+        except Exception as e:
+            logger.error(f"Failed to submit analysis task: {str(e)}")
+            self.message_user(
+                request,
+                f'Failed to start analysis: {str(e)}',
+                level='ERROR'
+            )
+    run_analysis.short_description = 'Run analysis on selected reviews'
+    
     def get_queryset(self, request):
         """Optimize queries with select_related for better performance"""
         return super().get_queryset(request).select_related(
             'app_platform_data__app'
-        )
+        ).prefetch_related('analysis_result')
     
     def changelist_view(self, request, extra_context=None):
         """Custom changelist view without global statistics"""
