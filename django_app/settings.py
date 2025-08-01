@@ -383,5 +383,5 @@ CACHES = {
 SESSION_ENGINE = "django.contrib.sessions.backends.cache"
 
 # OpenAI settings (for review analysis)
-OPENAI_API_KEY = "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" #os.getenv("OPENAI_API_KEY", "")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY", "")
 SESSION_CACHE_ALIAS = "default"
