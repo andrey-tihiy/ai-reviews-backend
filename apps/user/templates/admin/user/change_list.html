@@ -1,0 +1,140 @@
+{% extends "admin/change_list.html" %}
+{% load static %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+    .user-dashboard {
+        background: var(--primary-bg);
+        border: 1px solid var(--hairline-color);
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .dashboard-stats {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .stat-box {
+        background: var(--body-bg);
+        border: 1px solid var(--hairline-color);
+        border-radius: 6px;
+        padding: 15px;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .stat-number {
+        font-size: 20px;
+        font-weight: bold;
+        color: var(--link-fg);
+        margin-bottom: 5px;
+    }
+    
+    .stat-label {
+        color: var(--secondary-fg);
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    
+    .user-avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #007bff;
+        color: white;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: bold;
+        margin-right: 8px;
+    }
+    
+    .rating-badge {
+        background: #28a745;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .app-count {
+        background: #17a2b8;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    .review-count {
+        background: #6f42c1;
+        color: white;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+    
+    /* Dark theme support */
+    @media (prefers-color-scheme: dark) {
+        .user-dashboard {
+            background: var(--dark-bg);
+            border-color: var(--dark-border);
+        }
+        
+        .stat-box {
+            background: var(--dark-bg);
+            border-color: var(--dark-border);
+        }
+        
+        .stat-number {
+            color: var(--dark-link);
+        }
+        
+        .stat-label {
+            color: var(--dark-secondary);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content_title %}
+    <h1>👥 Users Management</h1>
+{% endblock %}
+
+{% block object-tools-items %}
+    {{ block.super }}
+{% endblock %}
+
+{% block content %}
+    <div class="user-dashboard">
+        <h3>📈 Dashboard Overview</h3>
+        <div class="dashboard-stats">
+            <div class="stat-box">
+                <div class="stat-number">{{ total_users|default:0 }}</div>
+                <div class="stat-label">Total Users</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{{ active_users|default:0 }}</div>
+                <div class="stat-label">Active Users</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{{ total_apps|default:0 }}</div>
+                <div class="stat-label">Total Apps</div>
+            </div>
+            <div class="stat-box">
+                <div class="stat-number">{{ total_reviews|default:0 }}</div>
+                <div class="stat-label">Total Reviews</div>
+            </div>
+        </div>
+    </div>
+    
+    {{ block.super }}
+{% endblock %} 
