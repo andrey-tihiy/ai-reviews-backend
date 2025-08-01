@@ -3,10 +3,13 @@ from datetime import datetime
 from typing import Dict, Any, Optional
 from decimal import Decimal
 
-from ..base import BasePlatformService
-from ...models import App, AppPlatformData
-from .client import AppleAppStoreClient
-from .exceptions import AppleAppStoreError
+from apps.review.models import Review
+from apps.app.services.base import BasePlatformService
+from apps.app.models import App, AppPlatformData
+from apps.app.services.apple.client import AppleAppStoreClient
+from apps.app.services.apple.exceptions import AppleAppStoreError
+from django.db import transaction
+
 
 logger = logging.getLogger('apps.app.services.apple.parser')
 
@@ -75,6 +78,8 @@ class AppleAppStoreService(BasePlatformService):
                 platform=self.get_platform_name(),
                 defaults=self._map_app_info_to_platform_data(app_info, reviews)
             )
+
+            self.process_app_reviews(platform_data, reviews)
             
             action = "Created" if created else "Updated"
             logger.info(f"{action} AppPlatformData (ID: {platform_data.id}) for app {app_instance.name}")
@@ -98,7 +103,37 @@ class AppleAppStoreService(BasePlatformService):
                 'error': str(e),
                 'processing_date': datetime.now().isoformat()
             }
-    
+
+
+    def process_app_reviews(
+            self,
+            app_platform_data: AppPlatformData,
+            reviews: list
+    ) -> None:
+        """ Process and save reviews for the app."""
+        objs = []
+        for rev in reviews:
+            updated_at = rev.get('updated_at', datetime.now().isoformat())
+            objs.append(Review(
+                app_platform_data=app_platform_data,
+                review_id=rev.get('id', ''),
+                author=rev.get('author', {}),
+                rating=rev.get('rating', 0),
+                title=rev.get('title', ''),
+                content=rev.get('content', ''),
+                version=rev.get('version', ''),
+                platform_updated_at=datetime.fromisoformat(updated_at),
+                metadata=rev.get('metadata', {})
+            ))
+
+            # Create or update Review instance
+            with transaction.atomic():
+                Review.objects.bulk_create(
+                    objs,
+                    batch_size=100,
+                    ignore_conflicts=True
+                )
+
     def _map_app_info_to_platform_data(self, app_info: Dict, reviews: list) -> Dict[str, Any]:
         """
         Map app info from iTunes API to AppPlatformData fields.
@@ -149,3 +184,4 @@ class AppleAppStoreService(BasePlatformService):
             'rating_count': app_info.get('rating_count', 0) or 0,
             'extra_metadata': extra_metadata
         }
+
