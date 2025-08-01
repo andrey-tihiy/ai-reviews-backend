@@ -36,4 +36,4 @@ class Review(UUIDModel):
         ]
 
     def __str__(self):
-        return f"{self.app_platform_data.app.name} | {self.rating}★ | {self.author[:20]}"
+        return f"{self.app_platform_data.app.name} | {self.rating}★ | {self.author[:20] if self.author else 'Anonymous'}"
