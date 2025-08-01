@@ -10,6 +10,11 @@ class App(UUIDModel):
     owner = models.ForeignKey(User, on_delete=models.DO_NOTHING)
     name = models.CharField(max_length=200)
     competitors = models.ManyToManyField('self', blank=True)
+    metadata = models.JSONField(
+        blank=True,
+        null=True,
+        help_text='Additional metadata for the app (featured, tags, etc.)'
+    )
 
     def __str__(self):
         return self.name

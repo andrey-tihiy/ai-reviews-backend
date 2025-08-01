@@ -3,6 +3,8 @@ from django.utils.html import format_html
 from django.utils.safestring import mark_safe
 from .models import Review
 from django.db import models
+from django.db.models import F
+from apps.app.models import AppPlatformData
 
 
 @admin.register(Review)
@@ -140,7 +142,7 @@ class ReviewAdmin(admin.ModelAdmin):
     
     def mark_as_important(self, request, queryset):
         """Action to mark reviews as important"""
-        updated = queryset.update(metadata=models.F('metadata') + {'important': True})
+        updated = queryset.update(metadata=F('metadata') + {'important': True})
         self.message_user(
             request,
             f'Marked as important: {updated} reviews'
@@ -150,7 +152,7 @@ class ReviewAdmin(admin.ModelAdmin):
     def mark_high_rating_reviews(self, request, queryset):
         """Action to mark high rating reviews"""
         high_rating_reviews = queryset.filter(rating__gte=4)
-        updated = high_rating_reviews.update(metadata=models.F('metadata') + {'high_rating': True})
+        updated = high_rating_reviews.update(metadata=F('metadata') + {'high_rating': True})
         self.message_user(
             request,
             f'Marked as high rating: {updated} reviews (rating 4-5)'
@@ -196,7 +198,3 @@ class ReviewAdmin(admin.ModelAdmin):
     def changelist_view(self, request, extra_context=None):
         """Custom changelist view without global statistics"""
         return super().changelist_view(request, extra_context=extra_context)
-
-
-# Импортируем AppPlatformData для использования в choices
-from apps.app.models import AppPlatformData
